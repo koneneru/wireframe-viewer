@@ -8,9 +8,11 @@ pub struct Vec2 {
 }
 
 impl Vec2 {
-    pub const fn new(x: f32, y: f32) -> Self {
-        Self { x, y }
-    }
+    pub const ZERO: Self = Self { x: 0.0, y: 0.0 };
+    pub const ONE: Self = Self { x: 1.0, y: 1.0 };
+
+    pub const X: Self = Self { x: 1.0, y: 0.0 };
+    pub const Y: Self = Self { x: 0.0, y: 1.0 };
 
     pub const fn x(self) -> f32 {
         self.x
@@ -18,6 +20,10 @@ impl Vec2 {
 
     pub const fn y(self) -> f32 {
         self.y
+    }
+
+    pub const fn new(x: f32, y: f32) -> Self {
+        Self { x, y }
     }
 
     pub fn dot(self, other: Self) -> f32 {
@@ -204,7 +210,7 @@ mod tests {
             },
             TestCase {
                 name: "zero vector",
-                input: Vec2::new(0.0, 0.0),
+                input: Vec2::ZERO,
                 expected: None,
             },
             TestCase {
