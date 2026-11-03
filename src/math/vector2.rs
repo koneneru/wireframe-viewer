@@ -1,4 +1,4 @@
-use core::fmt::{Display, Formatter, Result};
+use std::fmt::{Display, Formatter, Result};
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -49,11 +49,7 @@ impl Vec2 {
     pub fn try_normalize(self) -> Option<Self> {
         let len = self.length();
 
-        if len == 0.0 || !len.is_finite() {
-            None
-        } else {
-            Some(self / len)
-        }
+        (len.is_finite() && len > 0.0).then(|| self / len)
     }
 }
 
@@ -146,39 +142,6 @@ mod tests {
     const EPSILON: f32 = 1e-6;
 
     #[test]
-    fn add() {
-        let a = Vec2::new(1.0, 2.0);
-        let b = Vec2::new(3.0, 4.0);
-
-        assert_eq!(a + b, Vec2::new(4.0, 6.0));
-    }
-
-    #[test]
-    fn sub() {
-        let a = Vec2::new(5.0, 7.0);
-        let b = Vec2::new(2.0, 3.0);
-
-        assert_eq!(a - b, Vec2::new(3.0, 4.0));
-    }
-
-    #[test]
-    fn mul_scalar() {
-        let v = Vec2::new(2.0, 3.0);
-        let scalar = 2.0;
-
-        assert_eq!(v * scalar, Vec2::new(4.0, 6.0));
-        assert_eq!(scalar * v, Vec2::new(4.0, 6.0));
-    }
-
-    #[test]
-    fn div_scalar() {
-        let v = Vec2::new(4.0, 6.0);
-        let scalar = 2.0;
-
-        assert_eq!(v / scalar, Vec2::new(2.0, 3.0));
-    }
-
-    #[test]
     fn dot() {
         let a = Vec2::new(1.0, 2.0);
         let b = Vec2::new(3.0, 4.0);
@@ -226,7 +189,7 @@ mod tests {
             match (result, tc.expected) {
                 (Some(r), Some(e)) => {
                     assert!(
-                        approx_eq(r.x, e.x) && approx_eq(r.y, e.y),
+                        approx_eq(r.x(), e.x()) && approx_eq(r.y(), e.y()),
                         "Test case '{}' failed: expected {:?}, got {:?}",
                         tc.name,
                         e,
@@ -240,6 +203,39 @@ mod tests {
                 ),
             }
         }
+    }
+
+    #[test]
+    fn add() {
+        let a = Vec2::new(1.0, 2.0);
+        let b = Vec2::new(3.0, 4.0);
+
+        assert_eq!(a + b, Vec2::new(4.0, 6.0));
+    }
+
+    #[test]
+    fn sub() {
+        let a = Vec2::new(5.0, 7.0);
+        let b = Vec2::new(2.0, 3.0);
+
+        assert_eq!(a - b, Vec2::new(3.0, 4.0));
+    }
+
+    #[test]
+    fn mul_scalar() {
+        let v = Vec2::new(2.0, 3.0);
+        let scalar = 2.0;
+
+        assert_eq!(v * scalar, Vec2::new(4.0, 6.0));
+        assert_eq!(scalar * v, Vec2::new(4.0, 6.0));
+    }
+
+    #[test]
+    fn div_scalar() {
+        let v = Vec2::new(4.0, 6.0);
+        let scalar = 2.0;
+
+        assert_eq!(v / scalar, Vec2::new(2.0, 3.0));
     }
 
     #[test]

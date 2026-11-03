@@ -81,11 +81,7 @@ impl Vec3 {
     pub fn try_normalize(self) -> Option<Self> {
         let len = self.length();
 
-        if len == 0.0 || !len.is_finite() {
-            None
-        } else {
-            Some(self / len)
-        }
+        (len.is_finite() && len > 0.0).then(|| self / len)
     }
 }
 
@@ -185,11 +181,7 @@ impl Mul<Vec3> for f32 {
     type Output = Vec3;
 
     fn mul(self, rhs: Vec3) -> Self::Output {
-        Vec3 {
-            x: self * rhs.x,
-            y: self * rhs.y,
-            z: self * rhs.z,
-        }
+        rhs * self
     }
 }
 
@@ -206,11 +198,11 @@ mod tests {
     const EPSILON: f32 = 1e-6;
 
     #[test]
-    fn test_vec3_new() {
+    fn new() {
         let v = Vec3::new(1.0, 2.0, 3.0);
-        assert_eq!(v.x, 1.0);
-        assert_eq!(v.y, 2.0);
-        assert_eq!(v.z, 3.0);
+        assert_eq!(v.x(), 1.0);
+        assert_eq!(v.y(), 2.0);
+        assert_eq!(v.z(), 3.0);
     }
 
     #[test]
@@ -275,39 +267,6 @@ mod tests {
     }
 
     #[test]
-    fn add() {
-        let a = Vec3::new(1.0, 2.0, 3.0);
-        let b = Vec3::new(4.0, 5.0, 6.0);
-
-        assert_eq!(a + b, Vec3::new(5.0, 7.0, 9.0));
-    }
-
-    #[test]
-    fn sub() {
-        let a = Vec3::new(5.0, 7.0, 9.0);
-        let b = Vec3::new(1.0, 2.0, 3.0);
-
-        assert_eq!(a - b, Vec3::new(4.0, 5.0, 6.0));
-    }
-
-    #[test]
-    fn mul_scalar() {
-        let v = Vec3::new(1.0, 2.0, 3.0);
-        let scalar = 2.0;
-
-        assert_eq!(v * scalar, Vec3::new(2.0, 4.0, 6.0));
-        assert_eq!(scalar * v, Vec3::new(2.0, 4.0, 6.0));
-    }
-
-    #[test]
-    fn div_scalar() {
-        let v = Vec3::new(2.0, 4.0, 6.0);
-        let scalar = 2.0;
-
-        assert_eq!(v / scalar, Vec3::new(1.0, 2.0, 3.0));
-    }
-
-    #[test]
     fn length() {
         let v = Vec3::new(2.0, 3.0, 6.0);
 
@@ -347,7 +306,9 @@ mod tests {
             match (result, tc.expected) {
                 (Some(r), Some(e)) => {
                     assert!(
-                        approx_eq(r.x, e.x) && approx_eq(r.y, e.y) && approx_eq(r.z, e.z),
+                        approx_eq(r.x(), e.x())
+                            && approx_eq(r.y(), e.y())
+                            && approx_eq(r.z(), e.z()),
                         "Test case '{}' failed: expected {:?}, got {:?}",
                         tc.name,
                         e,
@@ -361,6 +322,39 @@ mod tests {
                 ),
             }
         }
+    }
+
+    #[test]
+    fn add() {
+        let a = Vec3::new(1.0, 2.0, 3.0);
+        let b = Vec3::new(4.0, 5.0, 6.0);
+
+        assert_eq!(a + b, Vec3::new(5.0, 7.0, 9.0));
+    }
+
+    #[test]
+    fn sub() {
+        let a = Vec3::new(5.0, 7.0, 9.0);
+        let b = Vec3::new(1.0, 2.0, 3.0);
+
+        assert_eq!(a - b, Vec3::new(4.0, 5.0, 6.0));
+    }
+
+    #[test]
+    fn mul_scalar() {
+        let v = Vec3::new(1.0, 2.0, 3.0);
+        let scalar = 2.0;
+
+        assert_eq!(v * scalar, Vec3::new(2.0, 4.0, 6.0));
+        assert_eq!(scalar * v, Vec3::new(2.0, 4.0, 6.0));
+    }
+
+    #[test]
+    fn div_scalar() {
+        let v = Vec3::new(2.0, 4.0, 6.0);
+        let scalar = 2.0;
+
+        assert_eq!(v / scalar, Vec3::new(1.0, 2.0, 3.0));
     }
 
     #[test]
