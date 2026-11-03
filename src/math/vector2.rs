@@ -1,15 +1,5 @@
-use core::fmt::{Formatter, Display, Result};
-use std::ops::{
-    Add,
-    AddAssign,
-    Sub,
-    SubAssign,
-    Mul,
-    MulAssign,
-    Div,
-    DivAssign,
-    Neg,
-};
+use core::fmt::{Display, Formatter, Result};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Vec2 {
@@ -54,10 +44,10 @@ impl Vec2 {
         let len = self.length();
 
         if len == 0.0 || !len.is_finite() {
-            return None;
+            None
+        } else {
+            Some(self / len)
         }
-        
-        Some(self / len)
     }
 }
 
@@ -65,10 +55,7 @@ impl Add for Vec2 {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
-        Self::new(
-            self.x + rhs.x,
-            self.y + rhs.y,
-        )
+        Self::new(self.x + rhs.x, self.y + rhs.y)
     }
 }
 
@@ -82,11 +69,8 @@ impl AddAssign for Vec2 {
 impl Sub for Vec2 {
     type Output = Self;
 
-    fn sub(self, rhs: Self) ->Self::Output {
-        Self::new(
-            self.x- rhs.x,
-            self.y - rhs.y,
-        )
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self::new(self.x - rhs.x, self.y - rhs.y)
     }
 }
 
@@ -101,10 +85,7 @@ impl Mul<f32> for Vec2 {
     type Output = Self;
 
     fn mul(self, rhs: f32) -> Self::Output {
-        Self::new(
-            self.x * rhs,
-            self.y * rhs,
-        )
+        Self::new(self.x * rhs, self.y * rhs)
     }
 }
 
@@ -119,10 +100,7 @@ impl Div<f32> for Vec2 {
     type Output = Self;
 
     fn div(self, rhs: f32) -> Self::Output {
-        Self::new(
-            self.x / rhs,
-            self.y / rhs,
-        )
+        Self::new(self.x / rhs, self.y / rhs)
     }
 }
 
@@ -169,7 +147,6 @@ mod tests {
         assert_eq!(a + b, Vec2::new(4.0, 6.0));
     }
 
-
     #[test]
     fn sub() {
         let a = Vec2::new(5.0, 7.0);
@@ -182,7 +159,7 @@ mod tests {
     fn mul_scalar() {
         let v = Vec2::new(2.0, 3.0);
         let scalar = 2.0;
-        
+
         assert_eq!(v * scalar, Vec2::new(4.0, 6.0));
         assert_eq!(scalar * v, Vec2::new(4.0, 6.0));
     }
@@ -242,10 +219,19 @@ mod tests {
 
             match (result, tc.expected) {
                 (Some(r), Some(e)) => {
-                    assert!(approx_eq(r.x, e.x) && approx_eq(r.y, e.y), "Test case '{}' failed: expected {:?}, got {:?}", tc.name, e, r);
+                    assert!(
+                        approx_eq(r.x, e.x) && approx_eq(r.y, e.y),
+                        "Test case '{}' failed: expected {:?}, got {:?}",
+                        tc.name,
+                        e,
+                        r
+                    );
                 }
                 (None, None) => {}
-                (result, expected) => panic!("Test case '{}' failed: expected {:?}, got {:?}", tc.name, expected, result),
+                (result, expected) => panic!(
+                    "Test case '{}' failed: expected {:?}, got {:?}",
+                    tc.name, expected, result
+                ),
             }
         }
     }
@@ -282,8 +268,7 @@ mod tests {
     }
 
     #[test]
-    fn negation()
-    {
+    fn negation() {
         let v = Vec2::new(1.0, -2.0);
 
         assert_eq!(-v, Vec2::new(-1.0, 2.0));
