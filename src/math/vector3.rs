@@ -325,6 +325,103 @@ mod tests {
     }
 
     #[test]
+    fn is_zero() {
+        struct TestCase {
+            name: &'static str,
+            input: Vec3,
+            expected: bool,
+        }
+
+        let test_cases = [
+            TestCase {
+                name: "zero vector",
+                input: Vec3::ZERO,
+                expected: true,
+            },
+            TestCase {
+                name: "negative zero",
+                input: Vec3::new(-0.0, 0.0, 0.0),
+                expected: true,
+            },
+            TestCase {
+                name: "non-zero vector",
+                input: Vec3::new(1.0, 2.0, 3.0),
+                expected: false,
+            },
+            TestCase {
+                name: "non-zero X component",
+                input: Vec3::new(-1.0, 0.0, 0.0),
+                expected: false,
+            },
+            TestCase {
+                name: "non-zero Y component",
+                input: Vec3::new(0.0, -1.0, 0.0),
+                expected: false,
+            },
+            TestCase {
+                name: "non-zero Z component",
+                input: Vec3::new(0.0, 0.0, -1.0),
+                expected: false,
+            },
+        ];
+
+        for tc in test_cases.iter() {
+            assert_eq!(
+                tc.input.is_zero(),
+                tc.expected,
+                "Test case '{}' failed",
+                tc.name
+            );
+        }
+    }
+
+    #[test]
+    fn is_finite() {
+        struct TestCase {
+            name: &'static str,
+            input: Vec3,
+            expected: bool,
+        }
+
+        let test_cases = [
+            TestCase {
+                name: "zero vector",
+                input: Vec3::ZERO,
+                expected: true,
+            },
+            TestCase {
+                name: "finite vector",
+                input: Vec3::new(1.0, -2.0, 3.0),
+                expected: true,
+            },
+            TestCase {
+                name: "positive infinity",
+                input: Vec3::new(f32::INFINITY, 0.0, 0.0),
+                expected: false,
+            },
+            TestCase {
+                name: "negative infinity",
+                input: Vec3::new(0.0, f32::NEG_INFINITY, 0.0),
+                expected: false,
+            },
+            TestCase {
+                name: "NaN",
+                input: Vec3::new(1.0, 2.0, f32::NAN),
+                expected: false,
+            },
+        ];
+
+        for tc in test_cases {
+            assert_eq!(
+                tc.input.is_finite(),
+                tc.expected,
+                "Test case '{}' failed",
+                tc.name
+            );
+        }
+    }
+
+    #[test]
     fn add() {
         let a = Vec3::new(1.0, 2.0, 3.0);
         let b = Vec3::new(4.0, 5.0, 6.0);

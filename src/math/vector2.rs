@@ -142,6 +142,14 @@ mod tests {
     const EPSILON: f32 = 1e-6;
 
     #[test]
+    fn new() {
+        let v = Vec2::new(1.0, 2.0);
+
+        assert_eq!(v.x(), 1.0);
+        assert_eq!(v.y(), 2.0);
+    }
+
+    #[test]
     fn dot() {
         let a = Vec2::new(1.0, 2.0);
         let b = Vec2::new(3.0, 4.0);
@@ -202,6 +210,98 @@ mod tests {
                     tc.name, expected, result
                 ),
             }
+        }
+    }
+
+    #[test]
+    fn is_zero() {
+        struct TestCase {
+            name: &'static str,
+            input: Vec2,
+            expected: bool,
+        }
+
+        let test_cases = [
+            TestCase {
+                name: "zero vector",
+                input: Vec2::ZERO,
+                expected: true,
+            },
+            TestCase {
+                name: "negative zero",
+                input: Vec2::new(-0.0, 0.0),
+                expected: true,
+            },
+            TestCase {
+                name: "non-zero vector",
+                input: Vec2::new(1.0, 2.0),
+                expected: false,
+            },
+            TestCase {
+                name: "non-zero X component",
+                input: Vec2::new(-1.0, 0.0),
+                expected: false,
+            },
+            TestCase {
+                name: "non-zero Y component",
+                input: Vec2::new(0.0, -1.0),
+                expected: false,
+            },
+        ];
+
+        for tc in test_cases.iter() {
+            assert_eq!(
+                tc.input.is_zero(),
+                tc.expected,
+                "Test case '{}' failed",
+                tc.name
+            );
+        }
+    }
+
+    #[test]
+    fn is_finite() {
+        struct TestCase {
+            name: &'static str,
+            input: Vec2,
+            expected: bool,
+        }
+
+        let test_cases = [
+            TestCase {
+                name: "zero vector",
+                input: Vec2::ZERO,
+                expected: true,
+            },
+            TestCase {
+                name: "finite vector",
+                input: Vec2::new(1.0, -2.0),
+                expected: true,
+            },
+            TestCase {
+                name: "positive infinity",
+                input: Vec2::new(f32::INFINITY, 0.0),
+                expected: false,
+            },
+            TestCase {
+                name: "negative infinity",
+                input: Vec2::new(0.0, f32::NEG_INFINITY),
+                expected: false,
+            },
+            TestCase {
+                name: "NaN",
+                input: Vec2::new(f32::NAN, 2.0),
+                expected: false,
+            },
+        ];
+
+        for tc in test_cases {
+            assert_eq!(
+                tc.input.is_finite(),
+                tc.expected,
+                "Test case '{}' failed",
+                tc.name
+            );
         }
     }
 
