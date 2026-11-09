@@ -1,6 +1,6 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Index, Mul, MulAssign, Neg, Sub, SubAssign};
 
-use super::Vec4;
+use super::{Vec3, Vec4};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Mat4 {
@@ -18,6 +18,57 @@ impl Mat4 {
 
     pub const fn from_columns(columns: [Vec4; 4]) -> Self {
         Self { columns }
+    }
+
+    pub const fn translation(offset: Vec3) -> Self {
+        Self::from_columns([
+            Vec4::X,
+            Vec4::Y,
+            Vec4::Z,
+            Vec4::new(offset.x(), offset.y(), offset.z(), 1.0),
+        ])
+    }
+
+    pub const fn scaling(scale: Vec3) -> Self {
+        Self::from_columns([
+            Vec4::new(scale.x(), 0.0, 0.0, 0.0),
+            Vec4::new(0.0, scale.y(), 0.0, 0.0),
+            Vec4::new(0.0, 0.0, scale.z(), 0.0),
+            Vec4::W,
+        ])
+    }
+
+    pub fn rotation_x(angle: f32) -> Self {
+        let (sin, cos) = angle.sin_cos();
+
+        Self::from_columns([
+            Vec4::X,
+            Vec4::new(0.0, cos, sin, 0.0),
+            Vec4::new(0.0, -sin, cos, 0.0),
+            Vec4::W,
+        ])
+    }
+
+    pub fn rotation_y(angle: f32) -> Self {
+        let (sin, cos) = angle.sin_cos();
+
+        Self::from_columns([
+            Vec4::new(cos, 0.0, -sin, 0.0),
+            Vec4::Y,
+            Vec4::new(sin, 0.0, cos, 0.0),
+            Vec4::W,
+        ])
+    }
+
+    pub fn rotation_z(angle: f32) -> Self {
+        let (sin, cos) = angle.sin_cos();
+
+        Self::from_columns([
+            Vec4::new(cos, sin, 0.0, 0.0),
+            Vec4::new(-sin, cos, 0.0, 0.0),
+            Vec4::Z,
+            Vec4::W,
+        ])
     }
 
     pub const fn column(&self, index: usize) -> Vec4 {
@@ -164,7 +215,8 @@ impl Index<(usize, usize)> for Mat4 {
 
 #[cfg(test)]
 mod tests {
-    use super::{Mat4, Vec4};
+    use super::{Mat4, Vec3, Vec4};
+    use std::f32::consts::FRAC_PI_2;
 
     const EPSILON: f32 = 1e-6;
 
@@ -454,6 +506,53 @@ mod tests {
         ]);
 
         assert!(!matrix.is_finite());
+    }
+
+    // --- Transformation ---
+
+    #[test]
+    fn translation() {
+        let got = Mat4::translation(Vec3::new(2.0, 3.0, 4.0));
+
+        let expected =
+            Mat4::from_columns([Vec4::X, Vec4::Y, Vec4::Z, Vec4::new(2.0, 3.0, 4.0, 1.0)]);
+
+        assert_mat4_approx_eq(got, expected);
+    }
+
+    #[test]
+    fn scaling() {
+        let got = Mat4::scaling(Vec3::new(2.0, 3.0, 4.0));
+
+        let expected = Mat4::from_columns([
+            Vec4::new(2.0, 0.0, 0.0, 0.0),
+            Vec4::new(0.0, 3.0, 0.0, 0.0),
+            Vec4::new(0.0, 0.0, 4.0, 0.0),
+            Vec4::new(0.0, 0.0, 0.0, 1.0),
+        ]);
+
+        assert_mat4_approx_eq(got, expected);
+    }
+
+    #[test]
+    fn rotation_x_transforms_basis_y_to_z() {
+        let rotation = Mat4::rotation_x(FRAC_PI_2);
+
+        assert_vec4_approx_eq(rotation * Vec4::Y, Vec4::Z);
+    }
+
+    #[test]
+    fn rotation_y_transforms_basis_z_to_x() {
+        let rotation = Mat4::rotation_y(FRAC_PI_2);
+
+        assert_vec4_approx_eq(rotation * Vec4::Z, Vec4::X);
+    }
+
+    #[test]
+    fn rotation_z_transforms_basis_x_to_y() {
+        let rotation = Mat4::rotation_z(FRAC_PI_2);
+
+        assert_vec4_approx_eq(rotation * Vec4::X, Vec4::Y);
     }
 
     // --- Helpers ---
