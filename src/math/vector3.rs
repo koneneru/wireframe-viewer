@@ -1,4 +1,3 @@
-use std::fmt::{Display, Formatter, Result};
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq)]
@@ -9,57 +8,27 @@ pub struct Vec3 {
 }
 
 impl Vec3 {
-    pub const ZERO: Self = Self {
-        x: 0.0,
-        y: 0.0,
-        z: 0.0,
-    };
-    pub const ONE: Self = Self {
-        x: 1.0,
-        y: 1.0,
-        z: 1.0,
-    };
+    pub const ZERO: Self = Self::new(0.0, 0.0, 0.0);
+    pub const ONE: Self = Self::new(1.0, 1.0, 1.0);
 
-    pub const X: Self = Self {
-        x: 1.0,
-        y: 0.0,
-        z: 0.0,
-    };
-    pub const Y: Self = Self {
-        x: 0.0,
-        y: 1.0,
-        z: 0.0,
-    };
-    pub const Z: Self = Self {
-        x: 0.0,
-        y: 0.0,
-        z: 1.0,
-    };
-
-    pub const fn x(self) -> f32 {
-        self.x
-    }
-    pub const fn y(self) -> f32 {
-        self.y
-    }
-    pub const fn z(self) -> f32 {
-        self.z
-    }
+    pub const X: Self = Self::new(1.0, 0.0, 0.0);
+    pub const Y: Self = Self::new(0.0, 1.0, 0.0);
+    pub const Z: Self = Self::new(0.0, 0.0, 1.0);
 
     pub const fn new(x: f32, y: f32, z: f32) -> Self {
         Self { x, y, z }
     }
 
-    pub fn dot(self, rhs: Self) -> f32 {
-        self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
+    pub const fn x(self) -> f32 {
+        self.x
     }
 
-    pub fn cross(self, rhs: Self) -> Self {
-        Self {
-            x: self.y * rhs.z - self.z * rhs.y,
-            y: self.z * rhs.x - self.x * rhs.z,
-            z: self.x * rhs.y - self.y * rhs.x,
-        }
+    pub const fn y(self) -> f32 {
+        self.y
+    }
+
+    pub const fn z(self) -> f32 {
+        self.z
     }
 
     pub fn length_squared(self) -> f32 {
@@ -78,22 +47,52 @@ impl Vec3 {
         self.x.is_finite() && self.y.is_finite() && self.z.is_finite()
     }
 
-    pub fn try_normalize(self) -> Option<Self> {
-        let len = self.length();
+    pub const fn dot(self, rhs: Self) -> f32 {
+        self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
+    }
 
-        (len.is_finite() && len > 0.0).then(|| self / len)
+    pub const fn cross(self, rhs: Self) -> Self {
+        Self::new(
+            self.y * rhs.z - self.z * rhs.y,
+            self.z * rhs.x - self.x * rhs.z,
+            self.x * rhs.y - self.y * rhs.x,
+        )
+    }
+
+    pub fn try_normalize(self) -> Option<Self> {
+        if !self.is_finite() {
+            return None;
+        }
+
+        let scale = self.abs().max_component();
+        if scale == 0.0 {
+            return None;
+        }
+
+        let scaled = self / scale;
+        let len = scaled.length();
+
+        Some(scaled / len)
+    }
+
+    // Helpers
+
+    fn abs(self) -> Self {
+        Self::new(self.x.abs(), self.y.abs(), self.z.abs())
+    }
+
+    fn max_component(self) -> f32 {
+        self.x.max(self.y).max(self.z)
     }
 }
+
+// Vector addition
 
 impl Add for Vec3 {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self {
-        Self {
-            x: self.x + rhs.x,
-            y: self.y + rhs.y,
-            z: self.z + rhs.z,
-        }
+        Self::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z)
     }
 }
 
@@ -105,15 +104,13 @@ impl AddAssign for Vec3 {
     }
 }
 
+// Vector subtraction
+
 impl Sub for Vec3 {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self {
-        Self {
-            x: self.x - rhs.x,
-            y: self.y - rhs.y,
-            z: self.z - rhs.z,
-        }
+        Self::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)
     }
 }
 
@@ -125,15 +122,13 @@ impl SubAssign for Vec3 {
     }
 }
 
+// Scalar multiplication
+
 impl Mul<f32> for Vec3 {
     type Output = Self;
 
     fn mul(self, rhs: f32) -> Self {
-        Self {
-            x: self.x * rhs,
-            y: self.y * rhs,
-            z: self.z * rhs,
-        }
+        Self::new(self.x * rhs, self.y * rhs, self.z * rhs)
     }
 }
 
@@ -145,15 +140,13 @@ impl MulAssign<f32> for Vec3 {
     }
 }
 
+// Scalar division
+
 impl Div<f32> for Vec3 {
     type Output = Self;
 
     fn div(self, rhs: f32) -> Self {
-        Self {
-            x: self.x / rhs,
-            y: self.y / rhs,
-            z: self.z / rhs,
-        }
+        Self::new(self.x / rhs, self.y / rhs, self.z / rhs)
     }
 }
 
@@ -165,29 +158,23 @@ impl DivAssign<f32> for Vec3 {
     }
 }
 
+// Negation
+
 impl Neg for Vec3 {
     type Output = Self;
 
     fn neg(self) -> Self {
-        Self {
-            x: -self.x,
-            y: -self.y,
-            z: -self.z,
-        }
+        Self::new(-self.x, -self.y, -self.z)
     }
 }
+
+// Scalar multiplication from the left
 
 impl Mul<Vec3> for f32 {
     type Output = Vec3;
 
     fn mul(self, rhs: Vec3) -> Self::Output {
         rhs * self
-    }
-}
-
-impl Display for Vec3 {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        write!(f, "Vec3({}, {}, {})", self.x, self.y, self.z)
     }
 }
 
@@ -253,7 +240,7 @@ mod tests {
             let result = tc.a.cross(tc.b);
             assert_eq!(
                 result, tc.expected,
-                "Test case '{}' failed: expected {}, got {}",
+                "Test case '{}' failed: expected {:?}, got {:?}",
                 tc.name, tc.expected, result,
             );
 

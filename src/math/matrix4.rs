@@ -8,13 +8,8 @@ pub struct Mat4 {
 }
 
 impl Mat4 {
-    pub const ZERO: Self = Self {
-        columns: [Vec4::ZERO; 4],
-    };
-
-    pub const IDENTITY: Self = Self {
-        columns: [Vec4::X, Vec4::Y, Vec4::Z, Vec4::W],
-    };
+    pub const ZERO: Self = Self::from_columns([Vec4::ZERO, Vec4::ZERO, Vec4::ZERO, Vec4::ZERO]);
+    pub const IDENTITY: Self = Self::from_columns([Vec4::X, Vec4::Y, Vec4::Z, Vec4::W]);
 
     pub const fn from_columns(columns: [Vec4; 4]) -> Self {
         Self { columns }
@@ -71,16 +66,20 @@ impl Mat4 {
         ])
     }
 
-    pub const fn column(&self, index: usize) -> Vec4 {
+    pub fn column(&self, index: usize) -> Vec4 {
+        assert!(index < 4, "Mat4 column index out of bounds: {index}");
+
         self.columns[index]
     }
 
     pub fn row(&self, index: usize) -> Vec4 {
+        assert!(index < 4, "Mat4 row index out of bounds: {index}");
+
         Vec4::new(
-            self.columns[0][index],
-            self.columns[1][index],
-            self.columns[2][index],
-            self.columns[3][index],
+            *self.columns[0].component(index),
+            *self.columns[1].component(index),
+            *self.columns[2].component(index),
+            *self.columns[3].component(index),
         )
     }
 
@@ -92,6 +91,8 @@ impl Mat4 {
         Self::from_columns([self.row(0), self.row(1), self.row(2), self.row(3)])
     }
 }
+
+// Matrix addition
 
 impl Add for Mat4 {
     type Output = Self;
@@ -110,6 +111,8 @@ impl AddAssign for Mat4 {
     }
 }
 
+// Matrix subtraction
+
 impl Sub for Mat4 {
     type Output = Self;
 
@@ -126,6 +129,8 @@ impl SubAssign for Mat4 {
         }
     }
 }
+
+// Scalar multiplication
 
 impl Mul<f32> for Mat4 {
     type Output = Self;
@@ -173,6 +178,8 @@ impl MulAssign for Mat4 {
     }
 }
 
+// Scalar multiplication from the left
+
 impl Mul<Mat4> for f32 {
     type Output = Mat4;
 
@@ -180,6 +187,8 @@ impl Mul<Mat4> for f32 {
         rhs * self
     }
 }
+
+// Scalar division
 
 impl Div<f32> for Mat4 {
     type Output = Self;
@@ -197,6 +206,8 @@ impl DivAssign<f32> for Mat4 {
     }
 }
 
+// Negation
+
 impl Neg for Mat4 {
     type Output = Self;
 
@@ -209,7 +220,11 @@ impl Index<(usize, usize)> for Mat4 {
     type Output = f32;
 
     fn index(&self, (row, column): (usize, usize)) -> &Self::Output {
-        &self.columns[column][row]
+        if row >= 4 || column >= 4 {
+            panic!("Mat4 index out of bounds: ({row}, {column})")
+        }
+
+        self.columns[column].component(row)
     }
 }
 
@@ -259,10 +274,10 @@ mod tests {
         for col in 0..4 {
             for row in 0..4 {
                 let got = mat[(row, col)];
-                let excepted = columns[col][row];
+                let excepted = columns[col].component(row);
 
                 assert_eq!(
-                    got, excepted,
+                    got, *excepted,
                     "Incorrect element at position [{row}][{col}]: got {got:?}, excepted {excepted:?}"
                 );
             }
@@ -304,7 +319,12 @@ mod tests {
 
         for i in 0..4 {
             let got = mat.row(i);
-            let expected = Vec4::new(columns[0][i], columns[1][i], columns[2][i], columns[3][i]);
+            let expected = Vec4::new(
+                *columns[0].component(i),
+                *columns[1].component(i),
+                *columns[2].component(i),
+                *columns[3].component(i),
+            );
 
             assert_eq!(
                 got, expected,
@@ -560,15 +580,18 @@ mod tests {
         (a - b).abs() <= EPSILON
     }
 
-    fn assert_vec4_approx_eq(got: Vec4, expected: Vec4) {
-        const COMPONENTS: [&str; 4] = ["x", "y", "z", "w"];
+    fn assert_vec4_approx_eq(got: Vec4, want: Vec4) {
+        let components = [
+            ("x", got.x(), want.x()),
+            ("y", got.y(), want.y()),
+            ("z", got.z(), want.z()),
+            ("w", got.w(), want.w()),
+        ];
 
-        for (i, name) in COMPONENTS.iter().enumerate() {
+        for (name, got, want) in components {
             assert!(
-                approx_eq(got[i], expected[i]),
-                "Vector mismatch at {name}: got {}, expected {}",
-                got[i],
-                expected[i],
+                approx_eq(got, want),
+                "Vector mismatch at {name}: got {got}, want {want}",
             );
         }
     }

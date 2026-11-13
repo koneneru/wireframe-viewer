@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Div, DivAssign, Index, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Vec4 {
@@ -37,14 +37,26 @@ impl Vec4 {
         self.w
     }
 
+    pub fn is_finite(self) -> bool {
+        self.x.is_finite() && self.y.is_finite() && self.z.is_finite() && self.w.is_finite()
+    }
+
     pub fn dot(self, rhs: Self) -> f32 {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z + self.w * rhs.w
     }
 
-    pub fn is_finite(self) -> bool {
-        self.x.is_finite() && self.y.is_finite() && self.z.is_finite() && self.w.is_finite()
+    pub(crate) fn component(&self, index: usize) -> &f32 {
+        match index {
+            0 => &self.x,
+            1 => &self.y,
+            2 => &self.z,
+            3 => &self.w,
+            _ => panic!("Vec4 component index out of bounds: {index}"),
+        }
     }
 }
+
+// Vector addition
 
 impl Add for Vec4 {
     type Output = Self;
@@ -68,6 +80,8 @@ impl AddAssign for Vec4 {
     }
 }
 
+// Vector subtraction
+
 impl Sub for Vec4 {
     type Output = Self;
 
@@ -90,6 +104,8 @@ impl SubAssign for Vec4 {
     }
 }
 
+// Scalar multiplication
+
 impl Mul<f32> for Vec4 {
     type Output = Self;
 
@@ -106,6 +122,8 @@ impl MulAssign<f32> for Vec4 {
         self.w *= rhs;
     }
 }
+
+// Scalar division
 
 impl Div<f32> for Vec4 {
     type Output = Self;
@@ -124,6 +142,8 @@ impl DivAssign<f32> for Vec4 {
     }
 }
 
+// Negation
+
 impl Neg for Vec4 {
     type Output = Self;
 
@@ -132,25 +152,13 @@ impl Neg for Vec4 {
     }
 }
 
+// Scalar multiplication from the left
+
 impl Mul<Vec4> for f32 {
     type Output = Vec4;
 
     fn mul(self, rhs: Vec4) -> Self::Output {
         rhs * self
-    }
-}
-
-impl Index<usize> for Vec4 {
-    type Output = f32;
-
-    fn index(&self, index: usize) -> &Self::Output {
-        match index {
-            0 => &self.x,
-            1 => &self.y,
-            2 => &self.z,
-            3 => &self.w,
-            _ => panic!("Vec4 index out of bounds: {index}"),
-        }
     }
 }
 

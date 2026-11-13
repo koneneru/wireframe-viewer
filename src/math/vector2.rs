@@ -1,4 +1,3 @@
-use std::fmt::{Display, Formatter, Result};
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq)]
@@ -8,11 +7,11 @@ pub struct Vec2 {
 }
 
 impl Vec2 {
-    pub const ZERO: Self = Self { x: 0.0, y: 0.0 };
-    pub const ONE: Self = Self { x: 1.0, y: 1.0 };
+    pub const ZERO: Self = Self::new(0.0, 0.0);
+    pub const ONE: Self = Self::new(1.0, 1.0);
 
-    pub const X: Self = Self { x: 1.0, y: 0.0 };
-    pub const Y: Self = Self { x: 0.0, y: 1.0 };
+    pub const X: Self = Self::new(1.0, 0.0);
+    pub const Y: Self = Self::new(0.0, 1.0);
 
     pub const fn x(self) -> f32 {
         self.x
@@ -24,10 +23,6 @@ impl Vec2 {
 
     pub const fn new(x: f32, y: f32) -> Self {
         Self { x, y }
-    }
-
-    pub fn dot(self, other: Self) -> f32 {
-        self.x * other.x + self.y * other.y
     }
 
     pub fn length_squared(self) -> f32 {
@@ -46,12 +41,38 @@ impl Vec2 {
         self.x.is_finite() && self.y.is_finite()
     }
 
-    pub fn try_normalize(self) -> Option<Self> {
-        let len = self.length();
+    pub fn dot(self, other: Self) -> f32 {
+        self.x * other.x + self.y * other.y
+    }
 
-        (len.is_finite() && len > 0.0).then(|| self / len)
+    pub fn try_normalize(self) -> Option<Self> {
+        if !self.is_finite() {
+            return None;
+        }
+
+        let scale = self.abs().max_component();
+        if scale == 0.0 {
+            return None;
+        }
+
+        let scaled = self / scale;
+        let len = scaled.length();
+
+        Some(scaled / len)
+    }
+
+    // Helpers
+
+    fn abs(self) -> Self {
+        Self::new(self.x.abs(), self.y.abs())
+    }
+
+    fn max_component(self) -> f32 {
+        self.x.max(self.y)
     }
 }
+
+// Vector addition
 
 impl Add for Vec2 {
     type Output = Self;
@@ -68,6 +89,8 @@ impl AddAssign for Vec2 {
     }
 }
 
+// Vector subtraction
+
 impl Sub for Vec2 {
     type Output = Self;
 
@@ -82,6 +105,8 @@ impl SubAssign for Vec2 {
         self.y -= rhs.y;
     }
 }
+
+// Scalar multiplication
 
 impl Mul<f32> for Vec2 {
     type Output = Self;
@@ -98,6 +123,8 @@ impl MulAssign<f32> for Vec2 {
     }
 }
 
+// Scalar division
+
 impl Div<f32> for Vec2 {
     type Output = Self;
 
@@ -113,6 +140,8 @@ impl DivAssign<f32> for Vec2 {
     }
 }
 
+// Negation
+
 impl Neg for Vec2 {
     type Output = Self;
 
@@ -121,17 +150,13 @@ impl Neg for Vec2 {
     }
 }
 
+// Scalar multiplication from the left
+
 impl Mul<Vec2> for f32 {
     type Output = Vec2;
 
     fn mul(self, rhs: Vec2) -> Self::Output {
         rhs * self
-    }
-}
-
-impl Display for Vec2 {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        write!(f, "Vec2({}, {})", self.x, self.y)
     }
 }
 

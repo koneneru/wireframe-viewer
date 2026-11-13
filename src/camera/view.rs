@@ -241,15 +241,18 @@ mod tests {
             (a - b).abs() <= EPSILON
         }
 
-        fn assert_vec4_approx_eq(got: Vec4, expected: Vec4) {
-            const COMPONENTS: [&str; 4] = ["x", "y", "z", "w"];
+        fn assert_vec4_approx_eq(got: Vec4, want: Vec4) {
+            let components = [
+                ("x", got.x(), want.x()),
+                ("y", got.y(), want.y()),
+                ("z", got.z(), want.z()),
+                ("w", got.w(), want.w()),
+            ];
 
-            for (i, name) in COMPONENTS.iter().enumerate() {
+            for (name, got, want) in components {
                 assert!(
-                    approx_eq(got[i], expected[i]),
-                    "Vector mismatch at {name}: got {}, expected {}",
-                    got[i],
-                    expected[i],
+                    approx_eq(got, want),
+                    "Vector mismatch at {name}: got {got}, want {want}",
                 );
             }
         }
