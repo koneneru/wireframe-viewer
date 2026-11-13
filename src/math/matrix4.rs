@@ -216,7 +216,6 @@ impl Index<(usize, usize)> for Mat4 {
 #[cfg(test)]
 mod tests {
     use super::{Mat4, Vec3, Vec4};
-    use std::f32::consts::FRAC_PI_2;
 
     const EPSILON: f32 = 1e-6;
 
@@ -536,21 +535,21 @@ mod tests {
 
     #[test]
     fn rotation_x_transforms_basis_y_to_z() {
-        let rotation = Mat4::rotation_x(FRAC_PI_2);
+        let rotation = Mat4::rotation_x(std::f32::consts::FRAC_PI_2);
 
         assert_vec4_approx_eq(rotation * Vec4::Y, Vec4::Z);
     }
 
     #[test]
     fn rotation_y_transforms_basis_z_to_x() {
-        let rotation = Mat4::rotation_y(FRAC_PI_2);
+        let rotation = Mat4::rotation_y(std::f32::consts::FRAC_PI_2);
 
         assert_vec4_approx_eq(rotation * Vec4::Z, Vec4::X);
     }
 
     #[test]
     fn rotation_z_transforms_basis_x_to_y() {
-        let rotation = Mat4::rotation_z(FRAC_PI_2);
+        let rotation = Mat4::rotation_z(std::f32::consts::FRAC_PI_2);
 
         assert_vec4_approx_eq(rotation * Vec4::X, Vec4::Y);
     }
