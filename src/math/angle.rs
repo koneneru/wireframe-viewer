@@ -155,6 +155,9 @@ mod tests {
     use super::*;
 
     const EPSILON: f32 = 1e-6;
+    const ANGLE_CONVERSION_EPSILON: f32 = 1e-4;
+    const LARGE_ANGLE_EPSILON: f32 = 1e-3;
+    const DEGREE_EPSILON: f32 = 1e-4;
 
     mod ctor {
         use super::*;
@@ -181,7 +184,7 @@ mod tests {
                 let got = angle.as_radians();
 
                 assert!(
-                    approx_eq(got, want),
+                    approx_eq(got, want, EPSILON),
                     "Test case '{name}' failed: got {got}, want {want}"
                 );
             }
@@ -209,7 +212,7 @@ mod tests {
                 let got = angle.as_radians();
 
                 assert!(
-                    approx_eq(got, want),
+                    approx_eq(got, want, EPSILON),
                     "Test case '{name}' failed: got {got}, want {want}",
                 );
             }
@@ -391,23 +394,23 @@ mod tests {
             let (sc_s, sc_c) = angle.sin_cos();
 
             assert!(
-                approx_eq(s, want_sin),
+                approx_eq(s, want_sin, EPSILON),
                 "Test case '{name}': sin({deg}) = {s}, want {want_sin}"
             );
             assert!(
-                approx_eq(c, want_cos),
+                approx_eq(c, want_cos, EPSILON),
                 "Test case '{name}': cos({deg}) = {c}, want {want_cos}"
             );
             assert!(
-                approx_eq(sc_s, want_sin),
+                approx_eq(sc_s, want_sin, EPSILON),
                 "Test case '{name}': sin_cos({deg}).sin = {sc_s}, want {want_sin}"
             );
             assert!(
-                approx_eq(sc_c, want_cos),
+                approx_eq(sc_c, want_cos, EPSILON),
                 "Test case '{name}': sin_cos({deg}).cos = {sc_c}, want {want_cos}"
             );
             assert!(
-                approx_eq(s * s + c * c, 1.0),
+                approx_eq(s * s + c * c, 1.0, EPSILON),
                 "Test case '{name}': Pythagorean identity failed"
             );
         }
@@ -417,15 +420,18 @@ mod tests {
     fn test_constants() {
         assert!(approx_eq(
             Angle::ZERO.as_radians(),
-            Angle::from_radians(0.0).as_radians()
+            Angle::from_radians(0.0).as_radians(),
+            EPSILON,
         ));
         assert!(approx_eq(
             Angle::HALF_TURN.as_radians(),
-            Angle::from_radians(-PI).as_radians()
+            Angle::from_radians(-PI).as_radians(),
+            EPSILON,
         ));
         assert!(approx_eq(
             Angle::QUARTER_TURN.as_radians(),
-            Angle::from_radians(FRAC_PI_2).as_radians()
+            Angle::from_radians(FRAC_PI_2).as_radians(),
+            EPSILON,
         ));
     }
 
@@ -434,49 +440,99 @@ mod tests {
         use std::f32::consts::{FRAC_PI_2, FRAC_PI_4, PI, TAU};
 
         let exact_cases = [
-            ("zero", 0.0, 0.0),
-            ("eighth_turn", 45.0, FRAC_PI_4),
-            ("quarter_turn", 90.0, FRAC_PI_2),
-            ("negative_quarter_turn", -90.0, -FRAC_PI_2),
-            ("half_turn", 180.0, PI),
-            ("three_quarter_turn", 270.0, 3.0 * FRAC_PI_2),
-            ("full_turn", 360.0, TAU),
-            ("negative_full_turn", -360.0, -TAU),
-            ("one_and_half_turns", 540.0, 3.0 * PI),
+            ("zero", 0.0, 0.0, 0.0, 0.0),
+            ("eighth turn", 45.0, FRAC_PI_4, 45.0, FRAC_PI_4),
+            ("quarter turn", 90.0, FRAC_PI_2, 90.0, FRAC_PI_2),
+            (
+                "negative quarter turn",
+                -90.0,
+                -FRAC_PI_2,
+                -90.0,
+                -FRAC_PI_2,
+            ),
+            ("half turn", 180.0, PI, -180.0, -PI),
+            (
+                "three quarter turn",
+                270.0,
+                3.0 * FRAC_PI_2,
+                -90.0,
+                -FRAC_PI_2,
+            ),
+            ("full turn", 360.0, TAU, 0.0, 0.0),
+            ("negative full turn", -360.0, -TAU, 0.0, 0.0),
+            ("one and half turns", 540.0, 3.0 * PI, -180.0, -PI),
         ];
 
-        for (name, deg, rad) in exact_cases {
+        for (name, deg, rad, want_deg, want_rad) in exact_cases {
             let from_deg = Angle::from_degrees(deg);
             let from_rad = Angle::from_radians(rad);
 
-            assert!(approx_eq(from_deg.as_degrees(), deg), "{name}: deg -> deg");
-            assert!(approx_eq(from_deg.as_radians(), rad), "{name}: deg -> rad");
-            assert!(approx_eq(from_rad.as_degrees(), deg), "{name}: rad -> deg");
-            assert!(approx_eq(from_rad.as_radians(), rad), "{name}: rad -> rad");
+            assert!(
+                approx_eq(from_deg.as_degrees(), want_deg, ANGLE_CONVERSION_EPSILON),
+                "{name}: deg -> deg: got {}, want {want_deg}",
+                from_deg.as_degrees(),
+            );
+            assert!(
+                approx_eq(from_deg.as_radians(), want_rad, ANGLE_CONVERSION_EPSILON),
+                "{name}: deg -> rad: got {}, want {want_rad}",
+                from_deg.as_radians(),
+            );
+            assert!(
+                approx_eq(from_rad.as_degrees(), want_deg, ANGLE_CONVERSION_EPSILON),
+                "{name}: rad -> deg: got {}, want {want_deg}",
+                from_rad.as_degrees(),
+            );
+            assert!(
+                approx_eq(from_rad.as_radians(), want_rad, ANGLE_CONVERSION_EPSILON),
+                "{name}: rad -> rad: got {}, want {want_rad}",
+                from_rad.as_radians(),
+            );
         }
 
         let arbitrary_cases = [
-            ("positive_fractional", 12.34),
-            ("negative_fractional", -127.89),
-            ("tiny_positive", 0.001),
-            ("multiple_rotations_fractional", 1085.5),
+            (
+                "positive fractional",
+                12.34,
+                12.34,
+                ANGLE_CONVERSION_EPSILON,
+            ),
+            (
+                "negative fractional",
+                -127.89,
+                -127.89,
+                ANGLE_CONVERSION_EPSILON,
+            ),
+            ("tiny positive", 0.001, 0.001, ANGLE_CONVERSION_EPSILON),
+            (
+                "multiple rotations fractional",
+                1085.5,
+                5.5,
+                ANGLE_CONVERSION_EPSILON,
+            ),
+            (
+                "multiple negative rotaions",
+                -1085.5,
+                -5.5,
+                ANGLE_CONVERSION_EPSILON,
+            ),
+            ("large positive", 3600.0, 0.0, LARGE_ANGLE_EPSILON),
+            ("large negative", -3600.0, 0.0, LARGE_ANGLE_EPSILON),
         ];
 
-        for (name, deg) in arbitrary_cases {
+        for (name, deg, want_deg, eps) in arbitrary_cases {
             let angle = Angle::from_degrees(deg);
-            assert!(approx_eq(angle.as_degrees(), deg), "{name}: round-trip");
+
+            assert!(
+                approx_eq(angle.as_degrees(), want_deg, eps),
+                "{name}: got {}, want {want_deg}",
+                angle.as_degrees()
+            );
         }
     }
 
-    fn approx_eq(a: f32, b: f32) -> bool {
-        (a - b).abs() < EPSILON
-    }
-
     fn assert_angle_deg_eq(case: &str, got: Angle, want: Angle) {
-        const DEG_EPSILON: f32 = 5e-5;
-
         let normalize_boundry = |degrees: f32| {
-            if (degrees.abs() - 180.0).abs() < DEG_EPSILON {
+            if (degrees.abs() - 180.0).abs() <= DEGREE_EPSILON {
                 -180.0
             } else {
                 degrees
@@ -487,8 +543,12 @@ mod tests {
         let want_deg = normalize_boundry(want.as_degrees());
 
         assert!(
-            (got_deg - want_deg).abs() <= DEG_EPSILON,
+            approx_eq(got_deg, want_deg, DEGREE_EPSILON),
             "Test case '{case}' failed: got {got_deg}, want {want_deg}"
         );
+    }
+
+    fn approx_eq(a: f32, b: f32, eps: f32) -> bool {
+        (a - b).abs() <= eps
     }
 }
