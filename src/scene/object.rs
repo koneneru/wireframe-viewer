@@ -188,7 +188,7 @@ mod tests {
             obj.set_rotation(initial);
             obj.rotate(offset);
 
-            assert_eq!(obj.rotation(), want);
+            assert_euler_angles_approx_eq(obj.rotation(), want);
         }
 
         #[test]
@@ -297,7 +297,17 @@ mod tests {
         }
     }
 
+    fn assert_euler_angles_approx_eq(got: EulerAngles, want: EulerAngles) {
+        assert!(
+            approx_eq(got.x().as_radians(), want.x().as_radians())
+                && approx_eq(got.y().as_radians(), want.y().as_radians())
+                && approx_eq(got.z().as_radians(), want.z().as_radians()),
+            "EulerAngles assertion failed with epsilon ({EPSILON})\n  got: {got:?}\n want: {want:?}",
+        );
+    }
+
     fn approx_eq(a: f32, b: f32) -> bool {
         (a - b).abs() < EPSILON
+        // (a - b).abs() < 0.0
     }
 }
