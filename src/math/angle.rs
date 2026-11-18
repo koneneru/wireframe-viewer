@@ -72,6 +72,10 @@ impl Angle {
             return 0.0;
         }
 
+        if radians >= -PI && radians < PI {
+            return if radians == 0.0 { 0.0 } else { radians };
+        }
+
         let normalized = (radians + PI).rem_euclid(TAU) - PI;
 
         if normalized == 0.0 { 0.0 } else { normalized }
