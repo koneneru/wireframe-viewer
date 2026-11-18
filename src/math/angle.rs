@@ -58,7 +58,7 @@ impl Angle {
     }
 
     /// Creates a normalized angle.
-    pub fn new(radians: f32) -> Self {
+    fn new(radians: f32) -> Self {
         Self {
             radians: Self::normalize(radians),
         }
