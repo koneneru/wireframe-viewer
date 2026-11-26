@@ -45,6 +45,15 @@ impl Vec4 {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z + self.w * rhs.w
     }
 
+    /// Lineary interpoletes between this vector and `other`.
+    ///
+    /// The interpolation parameter is not clamped, so values outside the range
+    /// `[0.0, 1.0]` perform extrapolation.
+    #[inline]
+    pub fn lerp(self, other: Self, t: f32) -> Self {
+        self * (1.0 - t) + other * t
+    }
+
     pub(crate) fn component(&self, index: usize) -> &f32 {
         match index {
             0 => &self.x,
@@ -192,6 +201,37 @@ mod tests {
         let b = Vec4::new(5.0, 6.0, 7.0, 8.0);
 
         assert_eq!(a.dot(b), 70.0);
+    }
+
+    #[test]
+    fn lerp_interpolates_correctly() {
+        let v0 = Vec4::new(2.0, 4.0, 6.0, 8.0);
+        let v1 = Vec4::new(10.0, 12.0, 14.0, 16.0);
+
+        let cases = [
+            ("at v0", 0.0, Vec4::new(2.0, 4.0, 6.0, 8.0)),
+            ("at v1", 1.0, Vec4::new(10.0, 12.0, 14.0, 16.0)),
+            ("midpoint", 0.5, Vec4::new(6.0, 8.0, 10.0, 12.0)),
+            ("extrapolate below v0", -0.5, Vec4::new(-2.0, 0.0, 2.0, 4.0)),
+            (
+                "extrapolate above v1",
+                1.5,
+                Vec4::new(14.0, 16.0, 18.0, 20.0),
+            ),
+        ];
+
+        for (name, t, want) in cases {
+            assert_eq!(v0.lerp(v1, t), want, "Test case '{name}' failed, t = {t}");
+        }
+    }
+
+    #[test]
+    fn lerp_handles_identical_vectors() {
+        let v = Vec4::new(5.0, -3.0, 8.0, 1.0);
+
+        assert_eq!(v.lerp(v, 0.0), v);
+        assert_eq!(v.lerp(v, 0.5), v);
+        assert_eq!(v.lerp(v, 1.0), v);
     }
 
     #[test]

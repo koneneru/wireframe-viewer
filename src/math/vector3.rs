@@ -59,6 +59,15 @@ impl Vec3 {
         )
     }
 
+    /// Lineary interpoletes between this vector and `other`.
+    ///
+    /// The interpolation parameter is not clamped, so values outside the range
+    /// `[0.0, 1.0]` perform extrapolation.
+    #[inline]
+    pub fn lerp(self, other: Self, t: f32) -> Self {
+        self * (1.0 - t) + other * t
+    }
+
     pub fn try_normalize(self) -> Option<Self> {
         if !self.is_finite() {
             return None;
@@ -251,6 +260,33 @@ mod tests {
                 tc.name,
             );
         }
+    }
+
+    #[test]
+    fn lerp_interpolates_correctly() {
+        let v0 = Vec3::new(2.0, 4.0, 6.0);
+        let v1 = Vec3::new(10.0, 12.0, 14.0);
+
+        let cases = [
+            ("at v0", 0.0, Vec3::new(2.0, 4.0, 6.0)),
+            ("at v1", 1.0, Vec3::new(10.0, 12.0, 14.0)),
+            ("midpoint", 0.5, Vec3::new(6.0, 8.0, 10.0)),
+            ("extrapolate below v0", -0.5, Vec3::new(-2.0, 0.0, 2.0)),
+            ("extrapolate above v1", 1.5, Vec3::new(14.0, 16.0, 18.0)),
+        ];
+
+        for (name, t, want) in cases {
+            assert_eq!(v0.lerp(v1, t), want, "Test case '{name}' failed, t = {t}");
+        }
+    }
+
+    #[test]
+    fn lerp_handles_identical_vectors() {
+        let v = Vec3::new(5.0, -3.0, 8.0);
+
+        assert_eq!(v.lerp(v, 0.0), v);
+        assert_eq!(v.lerp(v, 0.5), v);
+        assert_eq!(v.lerp(v, 1.0), v);
     }
 
     #[test]
